@@ -68,3 +68,84 @@ CREATE TABLE NCFSBHalfLines (away_team CHAR(40) NOT NULL,
         PRIMARY KEY (away_team, home_team, game_date, line, spread)
 );
 
+CREATE TABLE teamStatsPassing (
+    team CHAR(5) NOT NULL,
+    the_date TEXT NOT NULL,
+    comp_att TEXT,
+    yards INT,
+    avg_yards NUMERIC,
+    td INT,
+    ints INT,
+    qbr TEXT,
+    PRIMARY KEY (team, the_date)
+);
+CREATE TABLE teamStatsRushing (
+    team CHAR(5) NOT NULL,
+    the_date TEXT NOT NULL,
+    carries INT,
+    yards INT,
+    avg_yards NUMERIC,
+    td INT,
+    long_yards INT,
+    PRIMARY KEY (team, the_date)
+);
+CREATE TABLE teamStatsReceiving (
+    team CHAR(5) NOT NULL,
+    the_date TEXT NOT NULL,
+    rec INT,
+    yards INT,
+    avg_yards NUMERIC,
+    td INT,
+    long_yards INT,
+    PRIMARY KEY (team, the_date)
+);
+CREATE TABLE teamStatsInts (
+    team CHAR(5) NOT NULL,
+    the_date TEXT NOT NULL,
+    ints INT,
+    yards INT,
+    td INT,
+    PRIMARY KEY (team, the_date)
+);
+CREATE TABLE teamStatsKickReturns (
+    team CHAR(5) NOT NULL,
+    the_date TEXT NOT NULL,
+    no INT,
+    yards INT,
+    avg_yards NUMERIC,
+    long_yards INT,
+    td INT,
+    PRIMARY KEY (team, the_date)
+);
+CREATE TABLE teamStatsPuntReturns (
+    team CHAR(5) NOT NULL,
+    the_date TEXT NOT NULL,
+    no INT,
+    yards INT,
+    avg_yards NUMERIC,
+    long_yards INT,
+    td INT,
+    PRIMARY KEY (team, the_date)
+);
+CREATE TABLE teamStatsKicking (
+    team CHAR(5) NOT NULL,
+    the_date TEXT NOT NULL,
+    fg TEXT,
+    pct NUMERIC,
+    long_yards INT,
+    xp TEXT,
+    pts INT,
+    PRIMARY KEY (team, the_date)
+);
+CREATE TABLE teamStatsPunting (
+    team CHAR(5) NOT NULL,
+    the_date TEXT NOT NULL,
+    no INT,
+    yards INT,
+    avg_yards NUMERIC,
+    tb INT,
+    in_20 INT,
+    long_yards INT,
+    PRIMARY KEY (team, the_date)
+);
+

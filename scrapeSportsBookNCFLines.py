@@ -12,7 +12,7 @@ from urlparse import urlparse
 from bs4 import BeautifulSoup as bs
 from datetime import date, timedelta
 
-db = sqlite3.connect('/home/ec2-user/sports/sports.db')
+db = sqlite3.connect('/home/ec2-user/sports2015/NCF/sports.db')
 
 x=random.randint(1, 20)
 time.sleep(x)
@@ -61,8 +61,6 @@ for i in range(0, upper):
         spreads.append(0)
         next
 
-#today = date.today()
-#today = today.strftime("%m/%d/%Y")
 today = str(datetime.datetime.now() - timedelta(hours=2))[0:10]
 today = time.strftime("%m/%d/%Y", time.strptime(today, '%Y-%m-%d'))
 
@@ -71,7 +69,7 @@ date_time = str(datetime.datetime.now())
 for i in range(0, len(lines)):
     try:
         with db:
-            db.execute('''INSERT INTO NBASBLines(away_team, home_team, line, spread, game_date, game_time) VALUES(?,?,?,?,?,?)''', (awayTeams[i], homeTeams[i], lines[i], spreads[i], today, date_time))
+            db.execute('''INSERT INTO NCFSBLines(away_team, home_team, line, spread, game_date, game_time) VALUES(?,?,?,?,?,?)''', (awayTeams[i], homeTeams[i], lines[i], spreads[i], today, date_time))
             db.commit()
     except sqlite3.IntegrityError:
         print 'Record Exists'
@@ -79,8 +77,8 @@ for i in range(0, len(lines)):
 for i in range(0, len(lines)):
     try:
         with db:
-            db.execute('''INSERT INTO NBASBteamlookup(sb_team, espn_abbr) VALUES (?,?)''', (awayTeams[i], None))
-            db.execute('''INSERT INTO NBASBteamlookup(sb_team, espn_abbr) VALUES (?,?)''', (homeTeams[i], None))
+            db.execute('''INSERT INTO NCFSBteamlookup(sb_team, espn_abbr) VALUES (?,?)''', (awayTeams[i], None))
+            db.execute('''INSERT INTO NCFSBteamlookup(sb_team, espn_abbr) VALUES (?,?)''', (homeTeams[i], None))
     except:
         print 'Record Exists'
 
