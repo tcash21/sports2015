@@ -12,9 +12,9 @@ from urlparse import urlparse
 from bs4 import BeautifulSoup as bs
 from datetime import date, timedelta
 
-db = sqlite3.connect('/home/ec2-user/sports/sports.db')
+db = sqlite3.connect('/home/ec2-user/sports2015/NCF/sports.db')
 
-x=random.randint(1, 20)
+x=random.randint(3,10)
 time.sleep(x)
 
 #url = urllib2.urlopen('https://www.sportsbook.ag/sbk/sportsbook4/nba-betting/nba-2nd-half-lines.sbk')
@@ -38,6 +38,10 @@ spreads = []
 
 for i in range(0, len(the_lines)):
     try:
+        if the_lines[i] == '-':
+            lines.append('-')
+        if the_spreads[i] == '-':
+            spreads.append('-')
         lines.append(re.search('(\d+\\.?\d+)\\(', the_lines[i]).group(1))
         spreads.append(re.search('([+-]?\d+\\.?\d?)\\(', the_spreads[i]).group(1))
     except:
