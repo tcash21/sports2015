@@ -41,7 +41,7 @@ score INT NOT NULL,
 PRIMARY KEY (game_id, team)
 );
 
-CREATE TABLE NCFSBTeamLookup (sb_team CHAR(50) NOT NULL, espn_abbr CHAR(5), espn_name CHAR(30), PRIMARY KEY (sb_team));
+CREATE TABLE NCFSBTeamLookup (sb_team CHAR(50) NOT NULL, espn_abbr CHAR(5), PRIMARY KEY (sb_team));
 
 CREATE TABLE games(
         game_id INT PRIMARY KEY NOT NULL,
