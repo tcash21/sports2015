@@ -9,6 +9,9 @@ import jsonpickle
 import pandas as pd
 from urlparse import urlparse
 from bs4 import BeautifulSoup as bs
+from datetime import datetime
+from dateutil import tz
+from datetime import date, timedelta
 
 db = sqlite3.connect('/home/ec2-user/sports2015/NCF/sports.db')
 
@@ -24,7 +27,7 @@ def extractStats(statName):
     combined_stats = [team1_stat, team2_stat]
     return(combined_stats)
 
-week_num = str(2)
+week_num = str(3)
 divisions = ['http://espn.go.com/college-football/scoreboard/_/year/2015/seasontype/2/week/' + week_num,
 'http://espn.go.com/college-football/scoreboard/_/group/80/year/2015/seasontype/2/week/' + week_num,
 'http://espn.go.com/college-football/scoreboard/_/group/1/year/2015/seasontype/2/week/' + week_num,
@@ -83,6 +86,10 @@ for division in divisions:
             game_date=soup.findAll("span", {"data-date": True})[0]['data-date']
             t=time.strptime(game_date, "%Y-%m-%dT%H:%MZ")
             gdate=time.strftime('%m/%d/%Y %H:%M', t)
+            utc=datetime.strptime(gdate, '%m/%d/%Y %H:%M')
+            utc=utc.replace(tzinfo=from_zone)
+            est_date = utc.astimezone(to_zone)
+            gdate = est_date.strftime('%m/%d/%Y %H:%M')
             score1 = soup.findAll('div', {'class':'score icon-font-after'})[0].text
             score2 = soup.findAll('div', {'class':'score icon-font-before'})[0].text
             x=random.randint(3, 5)
