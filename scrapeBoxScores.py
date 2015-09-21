@@ -125,30 +125,30 @@ for division in divisions:
                             possessionTime = extractStats('possessionTime')
                         except:
                             possessionTime = ['-','-']
-                    except sqlite3.IntegrityError as err:
-                        print err
-                        continue
+                    except:
+                        print sys.exc_info()[0]
+                        pass
                     try:
                         with db:
                             db.execute('''INSERT INTO halfBoxScore(game_id, team, first_downs, third_downs, fourth_downs, total_yards, passing, comp_att, 
                                                 yards_per_pass, rushing, rushing_attempts, yards_per_rush, penalties, turnovers, fumbles_lost, ints_thrown,
                                                 possession, score ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (halftime_ids[i], team1, int(firstDowns[0]), thirdDowns[0],fourthDowns[0],int(totalYards[0]),int(passing[0]),completionAtt[0],float(ypp[0]),int(rushingYards[0]),int(rushingAtt[0]),float(yardsPerRushAttempt[0]),totalPenaltiesYards[0],int(turnovers[0]),int(fumblesLost[0]),int(ints[0]),possessionTime[0], score1))
                             db.commit()
-                    except sqlite3.IntegrityError as err:
-                        print err
-                        continue
+                    except:
+                        print sys.exc_info()[0]
+                        pass
                     try:
                         with db:
                             db.execute('''INSERT INTO halfBoxScore(game_id, team, first_downs, third_downs, fourth_downs, total_yards, passing, comp_att, 
                                                 yards_per_pass, rushing, rushing_attempts, yards_per_rush, penalties, turnovers, fumbles_lost, ints_thrown,
                                                 possession, score ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (halftime_ids[i], team2, int(firstDowns[1]),thirdDowns[1],fourthDowns[1],int(totalYards[1]),int(passing[1]),completionAtt[1],float(ypp[1]),int(rushingYards[1]),int(rushingAtt[1]),float(yardsPerRushAttempt[1]),totalPenaltiesYards[1],int(turnovers[1]),int(fumblesLost[1]),int(ints[1]),possessionTime[1], score2))
                             db.commit()
-                    except sqlite3.IntegrityError as err:
-                        print err
-                        continue
-            except sqlite3.IntegrityError as err:
-                print err
-                continue
+                    except:
+                        print sys.exc_info()[0]
+                        pass
+            except:
+                print sys.exc_info()[0]
+                pass
 
 db.close()
 
