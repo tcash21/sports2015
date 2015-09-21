@@ -127,6 +127,7 @@ for division in divisions:
                             possessionTime = ['-','-']
                     except sqlite3.IntegrityError as err:
                         print err
+                        continue
                     try:
                         with db:
                             db.execute('''INSERT INTO halfBoxScore(game_id, team, first_downs, third_downs, fourth_downs, total_yards, passing, comp_att, 
@@ -135,7 +136,7 @@ for division in divisions:
                             db.commit()
                     except sqlite3.IntegrityError as err:
                         print err
-
+                        continue
                     try:
                         with db:
                             db.execute('''INSERT INTO halfBoxScore(game_id, team, first_downs, third_downs, fourth_downs, total_yards, passing, comp_att, 
@@ -144,8 +145,10 @@ for division in divisions:
                             db.commit()
                     except sqlite3.IntegrityError as err:
                         print err
+                        continue
             except sqlite3.IntegrityError as err:
                 print err
+                continue
 
 db.close()
 
