@@ -1,3 +1,4 @@
+import sys
 import time
 import urllib2
 import re
@@ -56,11 +57,15 @@ divisions = ['http://espn.go.com/college-football/scoreboard/_/year/2015/seasont
 'http://espn.go.com/college-football/scoreboard/_/group/28/year/2015/seasontype/2/week/' + week_num,
 'http://espn.go.com/college-football/scoreboard/_/group/31/year/2015/seasontype/2/week/' + week_num,
 'http://espn.go.com/college-football/scoreboard/_/group/29/year/2015/seasontype/2/week/' + week_num,
-'http://espn.go.com/college-football/scoreboard/_/group/30/year/2015/seasontype/2/week/' + week_num,
-'http://espn.go.com/college-football/scoreboard/_/group/35/year/2015/seasontype/2/week/' +  week_num]
+'http://espn.go.com/college-football/scoreboard/_/group/30/year/2015/seasontype/2/week/' + week_num
+#'http://espn.go.com/college-football/scoreboard/_/group/35/year/2015/seasontype/2/week/' +  week_num]
+
+cur = db.execute("SELECT game_id from finalBoxScore")
+game_ids = cur.fetchall()
+game_ids = [str(g[0]) for g in game_ids]
 
 for division in divisions:
-    halftime_ids = []
+    final_ids = []
     url = urllib2.urlopen(division)
     soup = bs(url.read())
 
@@ -72,18 +77,22 @@ for division in divisions:
     half = [s['type']['shortDetail'] for s in status]
     index = [i for i, j in enumerate(half) if j == 'Final']
     ids = [game['id'] for game in games]
-    halftime_ids = [j for k, j in enumerate(ids) if k in index]
-
-    if(len(halftime_ids) == 0):
-        print "No Halftime Box Scores yet."
+    final_ids = [j for k, j in enumerate(ids) if k in index]
+    final_ids = list(set(final_ids) - set(game_ids))
+    print len(final_ids)
+    if(len(final_ids) == 0):
+        print "No Final Box Scores."
     else:
-        for i in range(0, len(halftime_ids)):
+        for i in range(0, len(final_ids)):  
+            print final_ids[i]
             x=random.randint(3, 5)
             time.sleep(x)
-            espn1 = 'http://espn.go.com/college-football/game?gameId=' + halftime_ids[i]
+            espn1 = 'http://espn.go.com/college-football/game?gameId=' + final_ids[i]
             url = urllib2.urlopen(espn1)
             soup = bs(url.read())
             game_date=soup.findAll("span", {"data-date": True})[0]['data-date']
+            from_zone = tz.gettz('UTC')
+            to_zone = tz.gettz('America/New_York')
             t=time.strptime(game_date, "%Y-%m-%dT%H:%MZ")
             gdate=time.strftime('%m/%d/%Y %H:%M', t)
             utc=datetime.strptime(gdate, '%m/%d/%Y %H:%M')
@@ -94,7 +103,7 @@ for division in divisions:
             score2 = soup.findAll('div', {'class':'score icon-font-before'})[0].text
             x=random.randint(3, 5)
             time.sleep(x)
-            espn = 'http://espn.go.com/college-football/matchup?gameId=' + halftime_ids[i]
+            espn = 'http://espn.go.com/college-football/matchup?gameId=' + final_ids[i]
             url = urllib2.urlopen(espn)
             soup = bs(url.read())
             boxscore = soup.find('table', {'class':'mod-data'})
@@ -102,8 +111,6 @@ for division in divisions:
             team2 = soup.findAll('span', {'class':'abbrev'})[1].text
             try:
                 with db:
-                    db.execute('''INSERT INTO games(game_id, team1, team2, game_date) VALUES(?,?,?,?)''', (halftime_ids[i], team1, team2, gdate))
-                    db.commit()
                     try:
                         firstDowns = extractStats('firstDowns')
                         thirdDowns = extractStats('thirdDownEff')
@@ -123,27 +130,31 @@ for division in divisions:
                             possessionTime = extractStats('possessionTime')
                         except:
                             possessionTime = ['-','-']
-                    except sqlite3.IntegrityError as err:
-                        print err
+                            pass
+                    except:
+                        print sys.exc_info()[0]
+                        pass
                     try:
                         with db:
                             db.execute('''INSERT INTO finalBoxScore(game_id, team, first_downs, third_downs, fourth_downs, total_yards, passing, comp_att, 
                                                 yards_per_pass, rushing, rushing_attempts, yards_per_rush, penalties, turnovers, fumbles_lost, ints_thrown,
-                                                possession, score ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (halftime_ids[i], team1, int(firstDowns[0]), thirdDowns[0],fourthDowns[0],int(totalYards[0]),int(passing[0]),completionAtt[0],float(ypp[0]),int(rushingYards[0]),int(rushingAtt[0]),float(yardsPerRushAttempt[0]),totalPenaltiesYards[0],int(turnovers[0]),int(fumblesLost[0]),int(ints[0]),possessionTime[0], score1))
+                                                possession, score ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (final_ids[i], team1, int(firstDowns[0]), thirdDowns[0],fourthDowns[0],int(totalYards[0]),int(passing[0]),completionAtt[0],float(ypp[0]),int(rushingYards[0]),int(rushingAtt[0]),float(yardsPerRushAttempt[0]),totalPenaltiesYards[0],int(turnovers[0]),int(fumblesLost[0]),int(ints[0]),possessionTime[0], score1))
                             db.commit()
-                    except sqlite3.IntegrityError as err:
-                        print err
-
+                    except:
+                        print sys.exc_info()[0]
+                        pass
                     try:
                         with db:
                             db.execute('''INSERT INTO finalBoxScore(game_id, team, first_downs, third_downs, fourth_downs, total_yards, passing, comp_att, 
                                                 yards_per_pass, rushing, rushing_attempts, yards_per_rush, penalties, turnovers, fumbles_lost, ints_thrown,
-                                                possession, score ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (halftime_ids[i], team2, int(firstDowns[1]),thirdDowns[1],fourthDowns[1],int(totalYards[1]),int(passing[1]),completionAtt[1],float(ypp[1]),int(rushingYards[1]),int(rushingAtt[1]),float(yardsPerRushAttempt[1]),totalPenaltiesYards[1],int(turnovers[1]),int(fumblesLost[1]),int(ints[1]),possessionTime[1], score2))
+                                                possession, score ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', (final_ids[i], team2, int(firstDowns[1]),thirdDowns[1],fourthDowns[1],int(totalYards[1]),int(passing[1]),completionAtt[1],float(ypp[1]),int(rushingYards[1]),int(rushingAtt[1]),float(yardsPerRushAttempt[1]),totalPenaltiesYards[1],int(turnovers[1]),int(fumblesLost[1]),int(ints[1]),possessionTime[1], score2))
                             db.commit()
-                    except sqlite3.IntegrityError as err:
-                        print err
-            except sqlite3.IntegrityError as err:
-                print err
+                    except:
+                        print sys.exc_info()[0]
+                        pass
+            except:
+                print sys.exc_info()[0]
+                pass
 
 db.close()
 
