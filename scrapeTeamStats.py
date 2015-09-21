@@ -99,6 +99,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[1]) == 1):
                     team2_passing = [h.text for h in stats[1][0]] 
                     if(len(team2_passing) == 6):
@@ -109,6 +110,7 @@ for division in divisions:
        	       	            db.commit()	
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[2]) == 1):
                     team1_rushing = [h.text for h in stats[2][0]]
                     with db:
@@ -117,6 +119,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[3]) == 1):
                     team2_rushing = [h.text for h in stats[3][0]]
      	       	    with db:
@@ -125,6 +128,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[4]) == 1):
                     team1_receiving = [h.text for h in stats[4][0]]
                     with db:
@@ -133,6 +137,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[5]) == 1):
                     team2_receiving = [h.text for h in stats[5][0]]
                     with db:
@@ -141,6 +146,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[6]) == 1):
                     team1_ints = [h.text for h in stats[6][0]]
                     with db:
@@ -149,6 +155,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[7]) == 1):
                     team2_ints = [h.text for h in stats[7][0]]
                     with db:
@@ -157,6 +164,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[8]) == 1):
                     team1_kick_returns = [h.text for h in stats[8][0]]
                     with db:
@@ -165,6 +173,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[9]) == 1):
                     team2_kick_returns = [h.text for h in stats[9][0]]
                     with db:
@@ -173,6 +182,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[10]) == 1):
                     team1_punt_returns = [h.text for h in stats[10][0]]
                     with db:
@@ -181,6 +191,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[11]) == 1):
                     team2_punt_returns = [h.text for h in stats[11][0]]
                     with db:
@@ -189,6 +200,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[12]) == 1):
                     team1_kicking = [h.text for h in stats[12][0]]
                     with db:
@@ -197,6 +209,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[13]) == 1):
                     team2_kicking = [h.text for h in stats[13][0]]
                     with db:
@@ -205,6 +218,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[14]) == 1):
                     team1_punting = [h.text for h in stats[14][0]]
                     with db:
@@ -213,6 +227,7 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
                 if(len(stats[15]) == 1):
                     team2_punting = [h.text for h in stats[15][0]]
                     with db:
@@ -221,5 +236,6 @@ for division in divisions:
                             db.commit()
                         except sqlite3.IntegrityError as err:
                             print err
+                            continue
 
 db.close()
