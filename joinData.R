@@ -33,7 +33,7 @@ halflines$home_espn<-lookup[match(halflines$home_team, lookup$sb_team),]$espn_ab
 lines$away_espn<-lookup[match(lines$away_team, lookup$sb_team),]$espn_abbr
 lines$home_espn<-lookup[match(lines$home_team, lookup$sb_team),]$espn_abbr
 halflines <- halflines[c("away_espn", "home_espn", "line", "game_date")]
-lines <- lines[c("away_espn", "home_espn", "line", "game_date")]
+lines <- lines[c("away_espn", "home_espn", "line", "spread", "game_date")]
 
 ## Join games and half lines data
 games$game_date<-substr(games$game_date,0,10)
@@ -41,13 +41,31 @@ games$key <- paste(games$team1, games$team2, games$game_date)
 halflines$key <- paste(halflines$away_espn, halflines$home_espn, halflines$game_date)
 games <- merge(halflines, games)
 
-halfbox <- merge(games, halfbox)[c("game_id", "game_date", "away_espn", "home_espn", "team", "line", "first_downs", "third_downs", "fourth_downs", "total_yards", "passing", "comp_att", 
+lines$key <- paste(lines$away_espn, lines$home_espn, lines$game_date)
+games <- merge(lines, games, by="key")
+
+halfbox <- merge(games, halfbox)[c("game_id", "game_date.x", "away_espn.x", "home_espn.x", "team", "line.x", "spread", "line.y", "first_downs", "third_downs", "fourth_downs", "total_yards", "passing", "comp_att", 
 			           "yards_per_pass", "rushing", "rushing_attempts", "yards_per_rush","penalties","turnovers", "fumbles_lost","ints_thrown", "possession", "score")]
 halfbox <- halfbox[order(halfbox$game_id),]
 halfbox$tempteam <- ""
 halfbox$tempteam[which(halfbox$team == halfbox$away_espn)] <- "team1"
 halfbox$tempteam[which(halfbox$team != halfbox$away_espn)] <- "team2"
 
-wide<-reshape(halfbox[,c(-2:-4)], direction = "wide", idvar="game_id", timevar="tempteam")
+finalbox <- merge(games, finalbox, by="game_id")
+finalbox <- finalbox[,c(-2,-7:-10, -12:-13)]
+finalbox <- finalbox[order(finalbox$game_id),]
+finalbox$tempteam <- ""
+finalbox$tempteam[which(finalbox$team == finalbox$away_espn.x)] <- "team1"
+finalbox$tempteam[which(finalbox$team != finalbox$away_espn.x)] <- "team2"
 
 
+wide<-reshape(halfbox[,c(-2:-5)], direction = "wide", idvar="game_id", timevar="tempteam")
+widefinal<-reshape(finalbox[,c(-2:-3)], direction = "wide", idvar="game_id", timevar="tempteam")
+
+colnames(widefinal) <- paste0("final_", colnames(widefinal))
+colnames(wide)[1] <- "final_game_id"
+
+all <- merge(wide, widefinal, by="final_game_id")
+
+
+dbDisconnect(con)
