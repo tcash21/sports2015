@@ -67,5 +67,24 @@ colnames(wide)[1] <- "final_game_id"
 
 all <- merge(wide, widefinal, by="final_game_id")
 
+vals<-apply(all, 2, function(x) grep("\\d+-|:", x))
+quote.cols <- which(lapply(vals, length) != 0)
+all[,which(lapply(vals, length) != 0)] <- apply(all[,which(lapply(vals, length) != 0)], 2, function(x) paste0('="', x, '"'))
+
+write.csv(all, file="/home/ec2-user/sports2015/NCF/testfile.csv", row.names=FALSE)
+
+sendmailV <- Vectorize( sendmail , vectorize.args = "to" )
+#emails <- c( "<tanyacash@gmail.com>" , "<malloyc@yahoo.com>", "<sschopen@gmail.com>")
+emails <- c("<tanyacash@gmail.com>")
+
+from <- "<tanyacash@gmail.com>"
+subject <- "Weekly NCF Data Report"
+body <- c(
+  "Chris -- see the attached file.",
+  mime_part("/home/ec2-user/sports2015/NCF/testfile.csv", "WeeklyData.csv")
+)
+sendmailV(from, to=emails, subject, body)
+
+
 
 dbDisconnect(con)
