@@ -30,7 +30,7 @@ def extractStats(statName):
     combined_stats = [team1_stat, team2_stat]
     return(combined_stats)
 
-week_num = str(4)
+week_num = str(5)
 divisions = ['http://espn.go.com/college-football/scoreboard/_/year/2015/seasontype/2/week/' + week_num,
 'http://espn.go.com/college-football/scoreboard/_/group/80/year/2015/seasontype/2/week/' + week_num,
 'http://espn.go.com/college-football/scoreboard/_/group/1/year/2015/seasontype/2/week/' + week_num,
@@ -64,6 +64,7 @@ divisions = ['http://espn.go.com/college-football/scoreboard/_/year/2015/seasont
 
 for division in divisions:
     halftime_ids = []
+    time.sleep(random.randint(1,3))
     url = urllib2.urlopen(division)
     soup = bs(url.read())
 
@@ -81,7 +82,7 @@ for division in divisions:
         print "No Halftime Box Scores yet."
     else:
         for i in range(0, len(halftime_ids)):
-            x=random.randint(3, 5)
+            x=random.randint(2, 4)
             time.sleep(x)
             espn1 = 'http://espn.go.com/college-football/game?gameId=' + halftime_ids[i]
             url = urllib2.urlopen(espn1)
