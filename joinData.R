@@ -17,7 +17,7 @@ for (i in seq(along=tables)) {
   lDataFrames[[i]] <- dbGetQuery(conn=con, statement=paste("SELECT away_team, home_team, game_date, line, spread, max(game_time) as
 game_time from ", tables[[i]], " group by away_team, home_team, game_date;"))
   } else {
-	lDataFrames[[i]] <- dbGetQuery(conn=con, statement=paste("SELECT * FROM '", tables[[i]], "'", sep=""))
+    lDataFrames[[i]] <- dbGetQuery(conn=con, statement=paste("SELECT * FROM '", tables[[i]], "'", sep=""))
   }
   cat(tables[[i]], ":", i, "\n")
 }
@@ -47,18 +47,18 @@ lines$key <- paste(lines$away_espn, lines$home_espn, lines$game_date)
 games <- merge(lines, games, by="key")
 
 halfbox <- merge(games, halfbox)[c("game_id", "game_date.x", "away_espn.x", "home_espn.x", "team", "line.x", "spread", "line.y", "first_downs", 
-			"third_downs", "fourth_downs", "total_yards", "passing", "comp_att", "yards_per_pass", "rushing", "rushing_attempts", 
-			"yards_per_rush","penalties","turnovers", "fumbles_lost","ints_thrown", "possession", "score")]
+            "third_downs", "fourth_downs", "total_yards", "passing", "comp_att", "yards_per_pass", "rushing", "rushing_attempts", 
+            "yards_per_rush","penalties","turnovers", "fumbles_lost","ints_thrown", "possession", "score")]
 halfbox <- halfbox[order(halfbox$game_id),]
 halfbox$tempteam <- ""
 halfbox$tempteam[which(halfbox$team == halfbox$away_espn)] <- "team1"
 halfbox$tempteam[which(halfbox$team != halfbox$away_espn)] <- "team2"
 
-
 ## calculate running first half season averages and merge with all data
 halfbox$game_date.x<-as.Date(halfbox$game_date.x, format='%m/%d/%Y')
 halfbox<-halfbox[order(halfbox$game_date),]
 
+## Split out the meaures with '-' in them into 2 numeric variables
 halfbox<-cbind(halfbox, do.call('rbind', strsplit(halfbox$third_downs, "-")))
 colnames(halfbox)[26:27] <- c("third_downs", "third_down_att")
 halfbox<-cbind(halfbox, do.call('rbind', strsplit(halfbox$fourth_downs, "-")))
@@ -67,6 +67,31 @@ halfbox<-cbind(halfbox, do.call('rbind', strsplit(halfbox$penalties, "-")))
 colnames(halfbox)[30:31] <- c("penalties", "penalty_yards")
 halfbox[,26:31] <- apply(halfbox[,26:31], 2, as.numeric)
 halfbox <- halfbox[,c(-10,-11,-14,-19)]
+
+## Split out the meaures with '-' in them into 2 numeric variables
+finalbox<-cbind(finalbox, do.call('rbind', strsplit(finalbox$third_downs, "-")))
+colnames(finalbox)[19:20] <- c("third_downs", "third_down_att")
+finalbox<-cbind(finalbox, do.call('rbind', strsplit(finalbox$fourth_downs, "-")))
+colnames(finalbox)[21:22] <- c("fourth_downs", "fourth_down_att")
+finalbox<-cbind(finalbox, do.call('rbind', strsplit(finalbox$penalties, "-")))
+colnames(finalbox)[23:24] <- c("penalties", "penalty_yards")
+finalbox[,19:24] <- apply(finalbox[,19:24], 2, as.numeric)
+finalbox <- finalbox[,c(-4, -5, -8, -13)]
+
+## Calculate 2nd half stats using halfbox and finalbox
+both.halves <- merge(halfbox, finalbox, by=c("game_id", "team"))
+both.halves$third_downs_2H <- both.halves$third_downs.y - both.halves$third_downs.x
+both.halves$third_down_att_2H <- both.halves$third_down_att.y - both.halves$third_down_att.x
+both.halves$fourth_downs_2H <- both.halves$fourth_downs.y - both.halves$fourth_downs.x
+both.halves$fourth_down_att_2H <- both.halves$fourth_down_att.y - both.halves$fourth_down_att.x
+both.halves$penalties_2H <- both.halves$penalties.y - both.halves$penalties.x
+both.halves$penalty_yards_2H <- both.halves$penalty_yards.y - both.halves$penalty_yards.x
+both.halves$total_yards_2H <- both.halves$total_yards.y - both.halves$total_yards.x
+both.halves$pass_yards_2H <- both.halves$passing.y - both.halves$passing.x
+both.halves$turnovers_2H <- both.halves$turnovers.y - both.halves$turnovers.x
+
+
+## Calculate first half season totals and averages
 halfbox<-data.frame(halfbox %>% group_by(team) %>% mutate(count = sequence(n())))
 dt <- data.table(halfbox)
 dt <- dt[, season_1H_third_down_total:=cumsum(third_downs), by = "team"]
@@ -82,63 +107,86 @@ dt <- dt[, season_1H_penalty_yards_total:=cumsum(penalty_yards), by = "team"]
 dt <- dt[, season_1H_penalty_yards_avg:=season_1H_penalty_yards_total / count, by = "team"]
 dt <- dt[, season_1H_turnovers_total:=cumsum(turnovers), by = "team"]
 dt <- dt[, season_1H_turnovers_avg:=season_1H_turnovers_total / count, by = "team"]
-halfbox <- data.frame(dt)
 
-finalbox <- merge(games, finalbox, by="game_id")
-finalbox <- finalbox[,c(-2,-8:-10, -12:-13)]
-finalbox <- finalbox[order(finalbox$game_id),]
-finalbox$tempteam <- ""
-finalbox$tempteam[which(finalbox$team == finalbox$away_espn.x)] <- "team1"
-finalbox$tempteam[which(finalbox$team != finalbox$away_espn.x)] <- "team2"
+## Lag every season variable by 1 game so stats are going into the game
+nm1<-grep("season_1H", colnames(dt), value=TRUE)
+nm2 <- paste("lag", nm1, sep=".")
+dt[, (nm2):=lapply(.SD, function(x) c(NA, x[-.N])), by=team, .SDcols=nm1]
+
+halfbox <- data.frame(dt)
+halfbox <- halfbox[,-grep("^season", colnames(halfbox))]
+
+secondhalf.box <- both.halves[,c("game_id", "game_date.x", "team", "third_downs_2H", "third_down_att_2H", "fourth_downs_2H", "fourth_down_att_2H", "penalties_2H", 
+                  "penalty_yards_2H", "total_yards_2H", "pass_yards_2H", "turnovers_2H", "score.y")]
+
+
+## calculate running second half season averages and merge with all data
+secondhalf.box$game_date.x<-as.Date(secondhalf.box$game_date.x, format='%m/%d/%Y')
+secondhalf.box<-secondhalf.box[order(secondhalf.box$game_date),]
+
+secondhalf.box<-data.frame(secondhalf.box %>% group_by(team) %>% mutate(count = sequence(n())))
+dt <- data.table(secondhalf.box)
+dt <- dt[, season_2H_third_down_total:=cumsum(third_downs_2H), by = "team"]
+dt <- dt[, season_2H_third_down_att_total:=cumsum(third_down_att_2H), by = "team"]
+dt <- dt[, season_2H_third_down_conv:=season_2H_third_down_total /season_2H_third_down_att_total, by = "team"]
+dt <- dt[, season_2H_fourth_down_total:=cumsum(fourth_downs_2H), by = "team"]
+dt <- dt[, season_2H_yards_total:=cumsum(total_yards_2H), by = "team"]
+dt <- dt[, season_2H_pass_yards_total:=cumsum(pass_yards_2H), by = "team"]
+dt <- dt[, season_2H_fourth_down_avg:=season_2H_fourth_down_total / count, by = "team"]
+dt <- dt[, season_2H_yards_avg:=season_2H_yards_total / count, by = "team"]
+dt <- dt[, season_2H_pass_yards_avg:=season_2H_pass_yards_total / count, by = "team"]
+dt <- dt[, season_2H_penalty_yards_total:=cumsum(penalty_yards_2H), by = "team"]
+dt <- dt[, season_2H_penalty_yards_avg:=season_2H_penalty_yards_total / count, by = "team"]
+dt <- dt[, season_2H_turnovers_total:=cumsum(turnovers_2H), by = "team"]
+dt <- dt[, season_2H_turnovers_avg:=season_2H_turnovers_total / count, by = "team"]
+
+## Lag every season variable by 1 game so stats are going into the game
+nm1<-grep("season_2H", colnames(dt), value=TRUE)
+nm2 <- paste("lag", nm1, sep=".")
+dt[, (nm2):=lapply(.SD, function(x) c(NA, x[-.N])), by=team, .SDcols=nm1]
+
+secondhalf.box <- data.frame(dt)
+secondhalf.box <- secondhalf.box[,-grep("^season", colnames(secondhalf.box))]
+
+
+secondhalf.box <- merge(games, secondhalf.box, by="game_id")
+secondhalf.box <- secondhalf.box[,c(-2,-8:-10, -11:-14)]
+secondhalf.box <- secondhalf.box[order(secondhalf.box$game_id),]
+secondhalf.box$tempteam <- ""
+secondhalf.box$tempteam[which(secondhalf.box$team == secondhalf.box$away_espn.x)] <- "team1"
+secondhalf.box$tempteam[which(secondhalf.box$team != secondhalf.box$away_espn.x)] <- "team2"
 
 
 wide<-reshape(halfbox[,c(-2:-5)], direction = "wide", idvar="game_id", timevar="tempteam")
-widefinal<-reshape(finalbox[,c(-2:-3)], direction = "wide", idvar="game_id", timevar="tempteam")
-colnames(widefinal) <- paste0("final_", colnames(widefinal))
-colnames(wide)[1] <- "final_game_id"
-
-widefinal<-subset(widefinal, select=-c(final_line.x.team1, final_spread.team1, final_line.y.team1,final_line.x.team2, 
-					final_spread.team2, final_line.y.team2))
-
-## pull out values from third downs, fourth downs, penalties, etc. split on '-'
-# wide<-cbind(wide, do.call('rbind', strsplit(wide$third_downs.team1, "-")))
-# wide<-cbind(wide, do.call('rbind', strsplit(wide$fourth_downs.team1, "-")))
-# wide<-cbind(wide, do.call('rbind', strsplit(wide$comp_att.team1, "-")))
-# wide<-cbind(wide, do.call('rbind', strsplit(wide$penalties.team1, "-")))
-# wide<-cbind(wide, do.call('rbind', strsplit(wide$third_downs.team2, "-")))
-# wide<-cbind(wide, do.call('rbind', strsplit(wide$fourth_downs.team2, "-")))
-# wide<-cbind(wide, do.call('rbind', strsplit(wide$comp_att.team2, "-")))
-# wide<-cbind(wide, do.call('rbind', strsplit(wide$penalties.team2, "-")))
-
-# colnames(wide)[40:55] <- c("third_downs.team1", "third_down_att.team1", "fourth_downs.team1", "fourth_down_att.team1", "comp.team1", 
-# 	"comp_att.team1","penalties.team1", "penalty_yards.team1", "third_downs.team2", "third_downs_att.team2", "fourth_downs.team2", 
-# 	"fourth_down_att.team2", "comp.team2", "comp_att.team2", "penalties.team2", "penalty_yards.team2")
-# wide <- wide[,c(-6:-7, -10, -15, -25:-26,-29,-34)]
-# wide[,32:47]<-apply(wide[,32:47], 2, as.numeric)
-
-widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_third_downs.team1, "-")))
-widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_fourth_downs.team1, "-")))
-widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_comp_att.team1, "-")))
-widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_penalties.team1, "-")))
-widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_third_downs.team2, "-")))
-widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_fourth_downs.team2, "-")))
-widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_comp_att.team2, "-")))
-widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_penalties.team2, "-")))
-
-colnames(widefinal)[38:53] <- c("final_third_downs.team1", "final_third_down_att.team1", "final_fourth_downs.team1", "final_fourth_down_att.team1", 
-				"final_comp.team1","final_comp_att.team1","final_penalties.team1", "final_penalty_yards.team1", "final_third_downs.team2", 
-				"final_third_downs_att.team2", "final_fourth_downs.team2","final_fourth_down_att.team2", "final_comp.team2", 
-				"final_comp_att.team2", "final_penalties.team2", "final_penalty_yards.team2")
-widefinal <- widefinal[,c(-5:-6, -9,-14, -23:-24,-27,-32)]
-widefinal[,30:45]<-apply(widefinal[,30:45], 2, as.numeric)
+widefinal<-reshape(secondhalf.box[,c(-2:-3)], direction = "wide", idvar="game_id", timevar="tempteam")
+#colnames(widefinal) <- paste0("final_", colnames(widefinal))
 
 
-all <- merge(wide, widefinal, by="final_game_id")
+wide <- subset(wide, select = -c(line.x.team2, spread.team2, line.y.team2 ))
+widefinal<-subset(widefinal, select=-c(line.x.team2, spread.team2, line.x.team1, spread.team1))
+
+# widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_third_downs.team1, "-")))
+# widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_fourth_downs.team1, "-")))
+# widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_comp_att.team1, "-")))
+# widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_penalties.team1, "-")))
+# widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_third_downs.team2, "-")))
+# widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_fourth_downs.team2, "-")))
+# widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_comp_att.team2, "-")))
+# widefinal<-cbind(widefinal, do.call('rbind', strsplit(widefinal$final_penalties.team2, "-")))
+
+# colnames(widefinal)[38:53] <- c("final_third_downs.team1", "final_third_down_att.team1", "final_fourth_downs.team1", "final_fourth_down_att.team1", 
+#                 "final_comp.team1","final_comp_att.team1","final_penalties.team1", "final_penalty_yards.team1", "final_third_downs.team2", 
+#                 "final_third_downs_att.team2", "final_fourth_downs.team2","final_fourth_down_att.team2", "final_comp.team2", 
+#                 "final_comp_att.team2", "final_penalties.team2", "final_penalty_yards.team2")
+# widefinal <- widefinal[,c(-5:-6, -9,-14, -23:-24,-27,-32)]
+# widefinal[,30:45]<-apply(widefinal[,30:45], 2, as.numeric)
+
+
+all <- merge(wide, widefinal, by="game_id")
+colnames(all) <- gsub("lag\\.", "", colnames(all))
 
 
 
-
-# all$key<-paste(all$final_game_date.x.team1, all$final_team.team1)
 # passing$game_date<-as.Date(passing$the_date, format='%m/%d/%Y')
 # passing$key <- paste(passing$game_date, passing$team)
 # i<-grep("\\s{1}0",passing$the_date)
@@ -213,4 +261,5 @@ sendmailV(from, to=emails, subject, body)
 
 
 dbDisconnect(con)
+
 
