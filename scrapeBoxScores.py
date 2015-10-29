@@ -30,7 +30,7 @@ def extractStats(statName):
     combined_stats = [team1_stat, team2_stat]
     return(combined_stats)
 
-week_num = str(7)
+week_num = str(9)
 divisions = ['http://espn.go.com/college-football/scoreboard/_/year/2015/seasontype/2/week/' + week_num,
 'http://espn.go.com/college-football/scoreboard/_/group/80/year/2015/seasontype/2/week/' + week_num,
 'http://espn.go.com/college-football/scoreboard/_/group/1/year/2015/seasontype/2/week/' + week_num,
